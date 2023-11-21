@@ -4,9 +4,11 @@ import com.google.gson.JsonParser;
 import strategies.SimpleMovingAverageStrategy;
 import strategies.TradingStrategy;
 import utils.AlphaVantageConnector;
+import utils.DatabaseHelper;
 import utils.MarketData;
 import utils.TradeSignal;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -15,9 +17,20 @@ import java.util.Map.Entry;
 
 public class Main {
     public static void main(String[] args) {
-        AlphaVantageConnector connector = new AlphaVantageConnector();
-        String rawData = connector.fetchData("TIME_SERIES_DAILY", "AAPL"); // Example for Apple Inc
-        System.out.println("Raw Data: " + rawData); // Debugging line to check raw data
+        String symbol = "AAPL"; // Example for Apple Inc
+        DatabaseHelper dbHelper = new DatabaseHelper();
+        String rawData;
+
+        // Check if data is present in the database
+        if (dbHelper.isDataPresent(symbol)) {
+            rawData = dbHelper.getData(symbol);
+            System.out.println("Using cached data from database.");
+        } else {
+            AlphaVantageConnector connector = new AlphaVantageConnector();
+            rawData = connector.fetchData("TIME_SERIES_DAILY", symbol);
+            dbHelper.insertOrUpdateData(symbol, rawData);
+            System.out.println("Fetched data from Alpha Vantage and stored in database.");
+        }
 
         List<MarketData> marketDataList = parseMarketData(rawData);
         TradingStrategy strategy = new SimpleMovingAverageStrategy(5); // 5-day moving average
@@ -38,8 +51,11 @@ public class Main {
             for (Entry<String, JsonElement> entry : timeSeries.entrySet()) {
                 String key = entry.getKey();
                 JsonObject dayData = entry.getValue().getAsJsonObject();
+                LocalDate date = LocalDate.parse(key, DateTimeFormatter.ISO_DATE);
+
+                // Assuming you have a constructor in MarketData that accepts LocalDate
                 MarketData marketData = new MarketData(
-                        LocalDateTime.parse(key, DateTimeFormatter.ISO_DATE),
+                        date.atStartOfDay(), // Convert LocalDate to LocalDateTime at the start of the day
                         dayData.get("1. open").getAsDouble(),
                         dayData.get("2. high").getAsDouble(),
                         dayData.get("3. low").getAsDouble(),
@@ -53,4 +69,5 @@ public class Main {
         }
         return data;
     }
+
 }
