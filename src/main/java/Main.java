@@ -3,13 +3,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import strategies.SimpleMovingAverageStrategy;
 import strategies.TradingStrategy;
-import utils.AlphaVantageConnector;
-import utils.DatabaseHelper;
+import data.AlphaVantageConnector;
+import data.DatabaseHelper;
 import utils.MarketData;
 import utils.TradeSignal;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;

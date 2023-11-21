@@ -1,4 +1,6 @@
-package utils;
+package data;
+
+import utils.ConfigReader;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -6,8 +8,19 @@ import java.util.Scanner;
 
 public class AlphaVantageConnector {
 
-    private static final String API_KEY = "AOC28O26TBLJ0XJB";
+    private final String API_KEY;
     private static final String BASE_URL = "https://www.alphavantage.co/query?";
+
+    // Constructor with API Key as a parameter
+    public AlphaVantageConnector(String apiKey) {
+        this.API_KEY = apiKey;
+    }
+
+    // Constructor that uses ConfigReader to get the API Key
+    public AlphaVantageConnector() {
+        ConfigReader configReader = new ConfigReader();
+        this.API_KEY = configReader.getProperty("alphaVantage.apiKey");
+    }
 
     public String fetchData(String function, String symbol) {
         String urlString = BASE_URL + "function=" + function + "&symbol=" + symbol + "&apikey=" + API_KEY;
