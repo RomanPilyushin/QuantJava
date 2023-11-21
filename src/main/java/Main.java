@@ -20,18 +20,27 @@ public class Main {
         DatabaseHelper dbHelper = new DatabaseHelper();
         String rawData;
 
-        // Check if data is present in the database
         if (dbHelper.isDataPresent(symbol)) {
             rawData = dbHelper.getData(symbol);
             System.out.println("Using cached data from database.");
         } else {
             AlphaVantageConnector connector = new AlphaVantageConnector();
             rawData = connector.fetchData("TIME_SERIES_DAILY", symbol);
-            dbHelper.insertOrUpdateData(symbol, rawData);
-            System.out.println("Fetched data from Alpha Vantage and stored in database.");
+            if (rawData != null) {
+                dbHelper.insertOrUpdateData(symbol, rawData);
+                System.out.println("Fetched data from Alpha Vantage and stored in database.");
+            } else {
+                System.out.println("Failed to fetch data from Alpha Vantage.");
+                return;
+            }
         }
 
         List<MarketData> marketDataList = parseMarketData(rawData);
+        if (marketDataList.isEmpty()) {
+            System.out.println("No market data available for analysis.");
+            return;
+        }
+
         TradingStrategy strategy = new SimpleMovingAverageStrategy(5); // 5-day moving average
 
         for (MarketData data : marketDataList) {
